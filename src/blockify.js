@@ -1,5 +1,3 @@
-import { isNumber } from "util";
-
 /**
  * Checks if the characters following `str[position]` are equal to `nextChars`
  * @param {string} str The string to search

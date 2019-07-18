@@ -1,0 +1,18 @@
+{
+    "extends": "google",
+    "parserOptions": {
+        "sourceType": "module",
+        "ecmaVersion": 2019,
+        "ecmaFeatures": {
+            "impliedStrict": true
+        }
+    },
+    "rules": {
+        "max-len": "off",
+        "no-unused-vars": "warn"
+    },
+    "env": {
+        "node": true,
+        "jest": true
+    }
+}
