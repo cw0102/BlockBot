@@ -19,13 +19,28 @@ function isAlpha(str) {
 }
 
 /**
- * 
+ * Parses out a discord id from a string position
  * @param {string} str The string to parse from
  * @param {number} pos The position of the string to start at
  * @return {string} The full discord ID (or null if it is not a valid ID)
  */
 function getDiscordID(str, pos) {
   const idRegex = /<@[\d]+>/;
+  const result = idRegex.exec(str.slice(pos));
+  if (result == null) {
+    return null;
+  }
+  return result[0];
+}
+
+/**
+ * Parses out a discord custom emoji from a string position
+ * @param {*} str The string to parse from
+ * @param {*} pos The position of the string to start at
+ * @return {string} The full emoji id (or null if it is not a valid ID)
+ */
+function getDiscordEmoji(str, pos) {
+  const idRegex = /<:[\w~]+:[\d]+>/;
   const result = idRegex.exec(str.slice(pos));
   if (result == null) {
     return null;
@@ -43,7 +58,8 @@ export function blockify(text) {
   let skip = 0;
   for (let pos=0; pos < text.length; pos++) {
     if (skip > 0) {
-      skip--;
+      pos += skip - 1;
+      skip = 0;
       continue;
     }
 
@@ -97,6 +113,14 @@ export function blockify(text) {
       if (idStr != null) {
         out += idStr;
         skip = idStr.length;
+      } else {
+        out += char;
+      }
+    } else if (nextCharactersAre(text, pos, '<:')) {
+      const emojiStr = getDiscordEmoji(text, pos);
+      if (emojiStr != null) {
+        out += emojiStr;
+        skip = emojiStr.length;
       } else {
         out += char;
       }
