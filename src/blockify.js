@@ -19,14 +19,15 @@ function isAlpha(str) {
 }
 
 /**
- * Parses out a discord id from a string position
+ * Determines if `pattern` starts at `pos` in a given `str`
  * @param {string} str The string to parse from
  * @param {number} pos The position of the string to start at
- * @return {string} The full discord ID (or null if it is not a valid ID)
+ * @param {RegExp} pattern The regex pattern to match
+ * @return {string} The match if it exists, else null
  */
-function getDiscordID(str, pos) {
-  const idRegex = /<@[\d]+>/;
-  const result = idRegex.exec(str.slice(pos));
+function findNextPattern(str, pos, pattern) {
+  const regExPattern = RegExp(`^${pattern}`);
+  const result = regExPattern.exec(str.slice(pos));
   if (result == null) {
     return null;
   }
@@ -34,18 +35,34 @@ function getDiscordID(str, pos) {
 }
 
 /**
+ * Parses out a discord id from a string position
+ * @param {string} str The string to parse from
+ * @param {number} pos The position of the string to start at
+ * @return {string} The full discord ID (or null if it is not a valid ID)
+ */
+function getDiscordID(str, pos) {
+  return findNextPattern(str, pos, '<@[\\d]+>');
+}
+
+/**
  * Parses out a discord custom emoji from a string position
- * @param {*} str The string to parse from
- * @param {*} pos The position of the string to start at
+ * @param {string} str The string to parse from
+ * @param {number} pos The position of the string to start at
  * @return {string} The full emoji id (or null if it is not a valid ID)
  */
 function getDiscordEmoji(str, pos) {
-  const idRegex = /<:[\w~]+:[\d]+>/;
-  const result = idRegex.exec(str.slice(pos));
-  if (result == null) {
-    return null;
-  }
-  return result[0];
+  return findNextPattern(str, pos, '<:[\\w~]+:[\\d]+>');
+}
+
+/**
+ * Parses out regular emoji from a string position
+ * https://thekevinscott.com/emojis-in-javascript/
+ * @param {string} str The string to parse from
+ * @param {number} pos The position of the string to start at
+ * @return {string} The emoji
+ */
+function getEmoji(str, pos) {
+  return findNextPattern(str, pos, '(?:[\u2700-\u27bf]|(?:\ud83c[\udde6-\uddff]){2}|[\ud800-\udbff][\udc00-\udfff]|[\u0023-\u0039]\ufe0f?\u20e3|\u3299|\u3297|\u303d|\u3030|\u24c2|\ud83c[\udd70-\udd71]|\ud83c[\udd7e-\udd7f]|\ud83c\udd8e|\ud83c[\udd91-\udd9a]|\ud83c[\udde6-\uddff]|[\ud83c\ude01-\ude02]|\ud83c\ude1a|\ud83c\ude2f|[\ud83c\ude32-\ude3a]|[\ud83c\ude50-\ude51]|\u203c|\u2049|[\u25aa-\u25ab]|\u25b6|\u25c0|[\u25fb-\u25fe]|\u00a9|\u00ae|\u2122|\u2139|\ud83c\udc04|[\u2600-\u26FF]|\u2b05|\u2b06|\u2b07|\u2b1b|\u2b1c|\u2b50|\u2b55|\u231a|\u231b|\u2328|\u23cf|[\u23e9-\u23f3]|[\u23f8-\u23fa]|\ud83c\udccf|\u2934|\u2935|[\u2190-\u21ff])');
 }
 
 /**
@@ -117,10 +134,10 @@ export function blockify(text) {
         out += char;
       }
     } else if (nextCharactersAre(text, pos, '<:')) {
-      const emojiStr = getDiscordEmoji(text, pos);
-      if (emojiStr != null) {
-        out += emojiStr;
-        skip = emojiStr.length;
+      const customEmojiStr = getDiscordEmoji(text, pos);
+      if (customEmojiStr != null) {
+        out += customEmojiStr;
+        skip = customEmojiStr.length;
       } else {
         out += char;
       }
@@ -163,7 +180,15 @@ export function blockify(text) {
           out += ':exclamation:';
           break;
         default:
-          out += char;
+        {
+          const emoji = getEmoji(text, pos);
+          if (emoji != null) {
+            out += emoji;
+            skip = emoji.length;
+          } else {
+            out += char;
+          }
+        }
       }
     }
 
